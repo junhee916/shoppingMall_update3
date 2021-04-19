@@ -1,33 +1,124 @@
 const express = require('express')
+const productModel = require('../model/product')
 const router = express.Router()
 
+//get product
 router.get("/", (req, res) => {
-    res.json({
-        message : "get product"
-    })
+
+    productModel
+        .find()
+        .then( products => {
+            res.json({
+                msg : "get product",
+                count : products.length,
+                productInfo : products
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                msg : err.message
+            })
+        })
 })
 
+//detail get product
+router.get("/:productId", (req, res) => {
+    const id = req.params.productId
+
+    productModel
+        .findById(id)
+        .then( product => {
+            res.json({
+                msg : "detail get product",
+                productInfo : product
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                msg : err.message
+            })
+        })
+})
+
+//register product
 router.post("/", (req, res) => {
-    const newProduct = {
+    const newProduct = new productModel({
         name : req.body.productName,
         price : req.body.productPrice
+    })
+
+    newProduct
+        .save()
+        .then( product => {
+            res.json({
+                msg : "save product",
+                productInfo : product
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                msg : err.message
+            })
+        })
+})
+
+//update product
+router.patch("/:productId", (req, res) => {
+    const id = req.params.productId
+
+    const updateOps = {}
+
+    for (const ops of req.body){
+        updateOps[ops.propName] = ops.value
     }
-    res.json({
-        message : "register product",
-        productinfo : newProduct
-    })
+
+    productModel
+        .findByIdAndUpdate(id, {$set : updateOps})
+        .then( () => {
+            res.json({
+                msg : "update product by " + id
+            })
+        })
+        .catch( err => {
+            res.status(500).json({
+                msg : err.message
+            })
+        })
 })
 
-router.patch("/", (req, res) => {
-    res.json({
-        message : "updated product"
-    })
-})
-
+//delete product
 router.delete("/", (req, res) => {
-    res.json({
-        message: "delelted product"
-    })
+
+    productModel
+        .remove()
+        .then(() => {
+            res.json({
+                msg : "delete product"
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                msg : err.message
+            })
+        })
+})
+
+//detail delete product
+router.delete("/:productId", (req, res) => {
+    const id = req.params.productId
+
+    productModel
+        .findByIdAndRemove(id)
+        .then(() => {
+            res.json({
+                msg : "delete product by " + id
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                msg : err.message
+            })
+        })
 })
 
 module.exports = router
